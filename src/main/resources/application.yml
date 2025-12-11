@@ -3,10 +3,13 @@ server:
 
 spring:
   datasource:
-    url:
-    username:
-    password:
+    url: jdbc:mysql://localhost:3306/order_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh&characterEncoding=UTF-8
+    username: order
+    password: 123456
     driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jackson:
+    time-zone: Asia/Ho_Chi_Minh
 
   jpa:
     hibernate:
@@ -15,7 +18,11 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.MySQL8Dialect
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  redis:
+    host: localhost
+    port: 6379
 
 jwt:
   secret: "Khb8Bz5nP1vT9Lk38jf9ZnA9Gs87hsjP"
