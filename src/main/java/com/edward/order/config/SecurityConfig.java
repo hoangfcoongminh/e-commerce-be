@@ -1,7 +1,9 @@
 package com.edward.order.config;
 
 import com.edward.order.api.ApiResponse;
+import com.edward.order.enums.Role;
 import com.edward.order.security.CustomUserDetailsService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
@@ -34,6 +36,7 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomUserDetailsService userDetailsService;
     private final MessageSource messageSource;
+    private final ObjectMapper objectMapper;
 
     @Bean
     public AuthenticationEntryPoint restEntryPoint() {
@@ -52,7 +55,7 @@ public class SecurityConfig {
                     .errorCode(errorCode)
                     .status(HttpStatus.UNAUTHORIZED.value())
                     .build();
-            response.getWriter().write(api.toJson());
+            response.getWriter().write(objectMapper.writeValueAsString(api));
         };
     }
 
@@ -73,7 +76,7 @@ public class SecurityConfig {
                     .errorCode(errorCode)
                     .status(HttpStatus.FORBIDDEN.value())
                     .build();
-            response.getWriter().write(api.toJson());
+            response.getWriter().write(objectMapper.writeValueAsString(api));
         };
     }
 
@@ -88,7 +91,7 @@ public class SecurityConfig {
                         .accessDeniedHandler(accessDeniedHandler()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/**").hasRole(Role.ADMIN.name())
                         .anyRequest().authenticated()
                 );
 

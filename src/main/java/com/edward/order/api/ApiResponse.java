@@ -1,6 +1,7 @@
 package com.edward.order.api;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,8 +16,6 @@ import java.util.Map;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
 
-    private static final ObjectMapper MAPPER = new ObjectMapper();
-
     private LocalDateTime timestamp;
     private boolean success;
     private int status;
@@ -25,6 +24,8 @@ public class ApiResponse<T> {
     private String url;
     private T data;
     private Map<String, String> errors;
+
+    private MetaData pagination;
 
     public static <T> ApiResponse<T> success(T data) {
         return ApiResponse.<T>builder()
@@ -52,13 +53,5 @@ public class ApiResponse<T> {
     public ApiResponse<T> withErrors(Map<String, String> errors) {
         this.errors = errors;
         return this;
-    }
-
-    public String toJson() {
-        try {
-            return MAPPER.writeValueAsString(this);
-        } catch (Exception e) {
-            return "{\"success\":false,\"code\":500,\"message\":\"serialization error\"}";
-        }
     }
 }

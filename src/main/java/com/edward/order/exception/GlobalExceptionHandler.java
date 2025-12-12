@@ -33,6 +33,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiResponse<?>> handleBusinessException(
             BusinessException e,
+            HttpServletRequest req,
             Locale locale
     ) {
         String message = messageSource.getMessage(e.getMessage(), null, e.getMessage(), locale);
@@ -43,6 +44,7 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.BAD_REQUEST.value())
                 .errorCode(e.getErrorCode())
                 .message(message)
+                .url(req.getRequestURI())
                 .build();
 
         return ResponseEntity.badRequest().body(response);
