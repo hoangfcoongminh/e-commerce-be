@@ -29,4 +29,18 @@ public class CategoryController {
     ) {
         return ResponseUtils.success(categoryService.create(dto));
     }
+
+    @PutMapping()
+    public ResponseEntity<?> update(
+            @Valid @RequestBody CategoryDto dto
+    ) {
+        return ResponseUtils.success(categoryService.update(dto));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(
+            @PathVariable Long id
+    ) {
+        return ResponseUtils.success(categoryService.delete(id));
+    }
 }
