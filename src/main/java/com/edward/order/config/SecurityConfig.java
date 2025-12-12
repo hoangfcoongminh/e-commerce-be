@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
@@ -23,6 +24,7 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 
 @Configuration
 @EnableWebSecurity
@@ -37,13 +39,19 @@ public class SecurityConfig {
     public AuthenticationEntryPoint restEntryPoint() {
         return (request, response, authException) -> {
             String errorCode = "unauthorized";
-            String message = messageSource.getMessage(errorCode, null, request.getLocale());
+            String message = messageSource.getMessage(errorCode, null, "Unauthorized", request.getLocale());
 
-            response.setStatus(401);
+            response.setStatus(HttpStatus.UNAUTHORIZED.value());
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             response.setCharacterEncoding(StandardCharsets.UTF_8.name());
 
-            ApiResponse<?> api = ApiResponse.error(message, errorCode);
+            ApiResponse<?> api = ApiResponse.builder()
+                    .timestamp(LocalDateTime.now())
+                    .success(false)
+                    .message(message)
+                    .errorCode(errorCode)
+                    .status(HttpStatus.UNAUTHORIZED.value())
+                    .build();
             response.getWriter().write(api.toJson());
         };
     }
@@ -52,17 +60,22 @@ public class SecurityConfig {
     public AccessDeniedHandler accessDeniedHandler() {
         return (request, response, accessDeniedException) -> {
             String errorCode = "access-denied";
-            String message = messageSource.getMessage(errorCode, null, request.getLocale());
+            String message = messageSource.getMessage(errorCode, null, "Access Denied", request.getLocale());
 
-            response.setStatus(403);
+            response.setStatus(HttpStatus.FORBIDDEN.value());
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             response.setCharacterEncoding(StandardCharsets.UTF_8.name());
 
-            ApiResponse<?> api = ApiResponse.error(message, errorCode);
+            ApiResponse<?> api = ApiResponse.builder()
+                    .timestamp(LocalDateTime.now())
+                    .success(false)
+                    .message(message)
+                    .errorCode(errorCode)
+                    .status(HttpStatus.FORBIDDEN.value())
+                    .build();
             response.getWriter().write(api.toJson());
         };
     }
-
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -74,8 +87,8 @@ public class SecurityConfig {
                         .authenticationEntryPoint(restEntryPoint())
                         .accessDeniedHandler(accessDeniedHandler()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 );
 

@@ -1,5 +1,6 @@
 package com.edward.order.entity;
 
+import com.edward.order.enums.Gender;
 import com.edward.order.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
@@ -26,6 +27,15 @@ public class User extends BaseEntity implements UserDetails {
     private String email;
 
     private String password;
+
+    private String fullName;
+
+    private String phoneNumber;
+
+    private String address;
+
+    @Enumerated(EnumType.STRING)
+    private Gender gender;
 
     @Enumerated(EnumType.STRING)
     private Role role;
