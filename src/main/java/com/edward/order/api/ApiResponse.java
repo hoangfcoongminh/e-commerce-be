@@ -19,11 +19,12 @@ public class ApiResponse<T> {
 
     private LocalDateTime timestamp;
     private boolean success;
-    private String message;
+    private int status;
     private String errorCode;
+    private String message;
+    private String url;
     private T data;
     private Map<String, String> errors;
-    private String path;
 
     public static <T> ApiResponse<T> success(T data) {
         return ApiResponse.<T>builder()
@@ -34,17 +35,17 @@ public class ApiResponse<T> {
                 .build();
     }
 
-    public static ApiResponse<?> error(String message, String errorCode) {
-        return ApiResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .success(false)
-                .message(message)
-                .errorCode(errorCode)
-                .build();
-    }
+//    public static ApiResponse<?> error(String message, String errorCode) {
+//        return ApiResponse.builder()
+//                .timestamp(LocalDateTime.now())
+//                .success(false)
+//                .message(message)
+//                .errorCode(errorCode)
+//                .build();
+//    }
 
-    public ApiResponse<T> withPath(String path) {
-        this.path = path;
+    public ApiResponse<T> withUrl(String url) {
+        this.url = url;
         return this;
     }
 
