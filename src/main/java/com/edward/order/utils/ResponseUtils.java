@@ -1,7 +1,7 @@
 package com.edward.order.utils;
 
 import com.edward.order.api.ApiResponse;
-import com.edward.order.api.MetaData;
+import com.edward.order.api.Pagination;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -24,24 +24,26 @@ public class ResponseUtils {
         return req != null ? req.getRequestURI() : null;
     }
 
-    public static <T> ResponseEntity<ApiResponse<T>> success(T data) {
+    public static ResponseEntity<ApiResponse<Object>> success(Object data) {
 
-        ApiResponse<T> response = ApiResponse.<T>builder()
+        ApiResponse<Object> response = ApiResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.OK.value())
                 .success(true)
                 .url(getCurrentUrl())
-                .data(data)
                 .build();
 
         if (data instanceof Page<?> page) {
-            MetaData paging = MetaData.builder()
+            response.setData(page.getContent());
+            Pagination paging = Pagination.builder()
                     .page(page.getNumber())
                     .size(page.getSize())
                     .totalElements(page.getTotalElements())
                     .totalPages(page.getTotalPages())
                     .build();
             response.setPagination(paging);
+        } else {
+            response.setData(data);
         }
 
         return new ResponseEntity<>(response, HttpStatus.OK);

@@ -12,13 +12,18 @@ import com.edward.order.utils.SlugUtils;
 import jakarta.transaction.Transactional;
 import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CategoryService {
@@ -39,6 +44,7 @@ public class CategoryService {
             throw new BusinessException("category.invalid");
         }
         Category category = CategoryDto.of(dto);
+        category.setId(null);
         category.setSlug(slug);
         category = categoryRepository.save(category);
 
@@ -48,7 +54,8 @@ public class CategoryService {
     @Transactional
     public CategoryDto update(CategoryDto dto) {
         Category c = validate(dto);
-        c = CategoryDto.of(dto);
+        c.setName(dto.getName());
+        c.setDescription(dto.getDescription());
         c.setSlug(SlugUtils.toSlug(dto.getName()));
         c = categoryRepository.save(c);
 

@@ -2,12 +2,12 @@ package com.edward.order.dto;
 
 import com.edward.order.entity.Category;
 import jakarta.validation.constraints.NotBlank;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder
 public class CategoryDto {
 
@@ -20,6 +20,7 @@ public class CategoryDto {
 
     public static Category of(CategoryDto dto) {
         return Category.builder()
+                .id(dto.getId())
                 .name(dto.getName())
                 .description(dto.getDescription())
                 .build();
