@@ -1,10 +1,7 @@
 package com.edward.order.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
@@ -36,6 +33,8 @@ public abstract class BaseEntity {
 
     @LastModifiedBy
     private String updatedBy;
+
+    private Integer status;
 
     @Version
     private Long version;

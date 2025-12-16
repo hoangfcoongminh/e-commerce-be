@@ -1,6 +1,7 @@
 package com.edward.order.dto;
 
 import com.edward.order.entity.Category;
+import com.edward.order.enums.EntityStatus;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
@@ -17,12 +18,14 @@ public class CategoryDto {
     private String name;
     private String description;
     private String slug;
+    private Integer status;
 
     public static Category of(CategoryDto dto) {
         return Category.builder()
                 .id(dto.getId())
                 .name(dto.getName())
                 .description(dto.getDescription())
+                .status(dto.getStatus() != null ? dto.getStatus() : EntityStatus.ACTIVE.getValue())
                 .build();
     }
 
@@ -32,6 +35,7 @@ public class CategoryDto {
                 .name(category.getName())
                 .description(category.getDescription())
                 .slug(category.getSlug())
+                .status(category.getStatus())
                 .build();
     }
 }

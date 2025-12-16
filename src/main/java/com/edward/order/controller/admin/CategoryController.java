@@ -17,10 +17,16 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @GetMapping()
-    public ResponseEntity<?> getAll(
-            Pageable pageable
-    ) {
-        return ResponseUtils.success(categoryService.getAll(pageable));
+    public ResponseEntity<?> getAll() {
+        return ResponseUtils.success(categoryService.getAll());
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<?> search(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Integer status,
+            Pageable pageable) {
+        return ResponseUtils.success(categoryService.search(search, status, pageable));
     }
 
     @PostMapping()
