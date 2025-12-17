@@ -30,6 +30,13 @@ public class CategoryService {
     private final ProductRepository productRepository;
 
     public List<CategoryDto> getAll() {
+        return categoryRepository.findAll()
+                .stream()
+                .map(CategoryDto::toDto)
+                .toList();
+    }
+
+    public List<CategoryDto> getAllAndActive() {
         return categoryRepository.findAllAndActive()
                 .stream()
                 .map(CategoryDto::toDto)
@@ -49,12 +56,13 @@ public class CategoryService {
     @Transactional
     public CategoryDto create(CategoryDto dto) {
         String slug = SlugUtils.toSlug(dto.getName());
-        if (categoryRepository.existsBySlugAndActive(slug)) {
+        if (categoryRepository.findBySlugAndActive(slug).isPresent()) {
             throw new BusinessException("category.invalid");
         }
         Category category = CategoryDto.of(dto);
         category.setId(null);
         category.setSlug(slug);
+        category.setStatus(dto.getStatus() != null ? dto.getStatus() : EntityStatus.ACTIVE.getValue());
         category = categoryRepository.save(category);
 
         return CategoryDto.toDto(category);
@@ -78,7 +86,7 @@ public class CategoryService {
         }
         Category c = categoryRepository.findByIdAndActive(dto.getId()).orElseThrow(() -> new BusinessException("category.not.found"));
         String slug = SlugUtils.toSlug(dto.getName());
-        if (!slug.equals(c.getSlug()) && categoryRepository.existsBySlugAndActive(slug)) {
+        if (!slug.equals(c.getSlug()) && categoryRepository.findBySlugAndActive(slug).isPresent()) {
             throw new BusinessException("category.name.invalid");
         }
         return c;

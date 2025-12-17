@@ -21,7 +21,7 @@ public interface CategoryRepository extends JpaRepository<Category,Long> {
             "FROM Category c " +
             "WHERE c.slug = :slug " +
             "AND c.status = 1")
-    boolean existsBySlugAndActive(String slug);
+    Optional<Category> findBySlugAndActive(String slug);
 
     @Query(value = "SELECT c " +
             "FROM Category c " +

@@ -1,7 +1,6 @@
 package com.edward.order.controller.user;
 
-import com.edward.order.service.CategoryService;
-import com.edward.order.utils.ResponseUtils;
+import com.edward.order.service.SubCategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,14 +8,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/categories")
+@RequestMapping("/api/sub-categories")
 @RequiredArgsConstructor
-public class CategoryController {
+public class SubCategoryController {
 
-    private final CategoryService categoryService;
+    private final SubCategoryService subCategoryService;
 
     @GetMapping()
     public ResponseEntity<?> getAll() {
-        return ResponseUtils.success(categoryService.getAllAndActive());
+        return ResponseEntity.ok(subCategoryService.getAllAndActive());
     }
 }
