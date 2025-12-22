@@ -2,18 +2,23 @@ package com.edward.order.service;
 
 import com.edward.order.dto.ProductDto;
 import com.edward.order.dto.PromotionDto;
+import com.edward.order.dto.request.CreateProductRequest;
 import com.edward.order.dto.request.SearchProductRequest;
 import com.edward.order.entity.Product;
+import com.edward.order.entity.ProductImage;
 import com.edward.order.entity.Promotion;
 import com.edward.order.entity.PromotionProduct;
-import com.edward.order.repository.ProductRepository;
-import com.edward.order.repository.PromotionProductRepository;
-import com.edward.order.repository.PromotionRepository;
+import com.edward.order.enums.EntityStatus;
+import com.edward.order.exception.BusinessException;
+import com.edward.order.repository.*;
+import com.edward.order.utils.JsonMapperUtils;
+import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,10 +33,15 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final PromotionProductRepository promotionProductRepository;
     private final PromotionRepository promotionRepository;
+    private final SubCategoryRepository subCategoryRepository;
+    private final R2StorageService r2StorageService;
+    private final ProductImageRepository productImageRepository;
+
+    private static final String PRODUCT_IMAGE_FOLDER = "products";
 
     public Page<ProductDto> getAll(Pageable pageable) {
         Page<Product> data = productRepository.findAllAndActive(pageable);
-        List<ProductDto> response = toResponseWithPromotion(data.getContent());
+        List<ProductDto> response = toResponse(data.getContent());
         return new PageImpl<>(response, pageable, data.getTotalElements());
     }
 
@@ -41,7 +51,7 @@ public class ProductService {
         Page<Product> data = productRepository.search(search, request.getSubCategoryIds(), pageable);
         List<Product> products = data.getContent();
 
-        List<ProductDto> response = toResponseWithPromotion(products);
+        List<ProductDto> response = toResponse(products);
         response = response.stream()
                 .filter(p -> p.getRealPrice() >= request.getMinPrice() && p.getRealPrice() <= request.getMaxPrice())
                 .toList();
@@ -49,7 +59,7 @@ public class ProductService {
         return new PageImpl<>(response, pageable, data.getTotalElements());
     }
 
-    private List<ProductDto> toResponseWithPromotion(List<Product> products) {
+    private List<ProductDto> toResponse(List<Product> products) {
         List<Long> productIds = products.stream()
                 .map(Product::getId)
                 .toList();
@@ -59,13 +69,15 @@ public class ProductService {
         if (!promotionProducts.isEmpty()) {
             promotionMap = getPromotionMap(promotionProducts);
         }
+//        Map<Long, >
 
         List<ProductDto> response = new ArrayList<>();
         for (Product product : products) {
+            ProductDto dto = ProductDto.toDto(product);
+
             if (promotionMap == null) {
-                ProductDto dto = ProductDto.toDto(product);
                 dto.setRealPrice(product.getOriginalPrice());
-                dto.setPromotion(null);
+                dto.setPromotions(null);
                 response.add(dto);
                 continue;
             }
@@ -87,10 +99,14 @@ public class ProductService {
                         bestPromotion.set(promotion);
                     }
                 });
+                var dtos = promotions.stream().map(PromotionDto::toDto).toList();
+                dtos.forEach(d -> {
+                    d.setBestDeal(d.getId().equals(bestPromotion.get().getId()));
+                });
+                dto.setPromotions(dtos);
+
             }
-            ProductDto dto = ProductDto.toDto(product);
             dto.setRealPrice(realPrice.get());
-            dto.setPromotion(PromotionDto.toDto(bestPromotion.get()));
             response.add(dto);
         }
         return response;
@@ -112,5 +128,95 @@ public class ProductService {
                             return oldList;
                         }
                 ));
+    }
+
+    public List<ProductDto> createProducts(String jsonRequests, List<MultipartFile> files) {
+        // Parse JSON requests
+        List<CreateProductRequest> requests =
+                JsonMapperUtils.mapper(
+                        jsonRequests,
+                        new TypeReference<List<CreateProductRequest>>() {}
+                );
+
+        // Validate requests
+        validateCreateProducts(requests);
+
+        // Save products
+        List<Product> products = new ArrayList<>();
+        for (CreateProductRequest request : requests) {
+            Product p = CreateProductRequest.of(request);
+            p.setId(null);
+            p.setStatus(EntityStatus.ACTIVE.getValue());
+            products.add(p);
+        }
+        products = productRepository.saveAll(products);
+
+        // Save new product to promotions
+        for (int i = 0; i < products.size(); i++) {
+            Product p = products.get(i);
+            List<Long> promotionIds = requests.get(i).getPromotionIds();
+
+            if (promotionIds != null && !promotionIds.isEmpty()) {
+                List<PromotionProduct> promotionProducts = new ArrayList<>();
+                for (Long promotionId : promotionIds) {
+                    PromotionProduct pp = new PromotionProduct(null, promotionId, p.getId());
+                    promotionProducts.add(pp);
+                }
+                promotionProductRepository.saveAll(promotionProducts);
+            }
+        }
+
+        // Handle images
+        Map<String, MultipartFile> imagesMap = files.stream()
+                .collect(Collectors.toMap(MultipartFile::getOriginalFilename, f -> f));
+
+        List<ProductImage> productImages = new ArrayList<>();
+        for (int i = 0; i < requests.size(); i++) {
+            List<String> imageNamesOfProduct = requests.get(i).getImageNames();
+            List<MultipartFile> imagesToUpload = new ArrayList<>();
+            if (imageNamesOfProduct != null) {
+                for (String imageName : imageNamesOfProduct) {
+                    if (imagesMap.containsKey(imageName)) {
+                        imagesToUpload.add(imagesMap.get(imageName));
+                    }
+                }
+                Map<String, String> imageUrlMap = r2StorageService.bulkUpload(imagesToUpload, PRODUCT_IMAGE_FOLDER + "/" + products.get(i).getId());
+                for (String imageName : imageNamesOfProduct) {
+                    ProductImage productImage = new ProductImage();
+                    productImage.setProductId(products.get(i).getId());
+                    productImage.setUrl(imageUrlMap.get(imageName));
+                    productImages.add(productImage);
+                }
+            }
+        }
+        productImageRepository.saveAll(productImages);
+        return toResponse(products);
+    }
+
+    private void validateCreateProducts(List<CreateProductRequest> requests) {
+        if (requests.isEmpty()) {
+            throw new BusinessException("Request list cannot be empty.");
+        }
+        List<Long> subCategoryIds = requests.stream()
+                .map(CreateProductRequest::getSubCategoryId)
+                .distinct()
+                .toList();
+        if (subCategoryIds.size() != subCategoryRepository.countActiveByCategoryIds(subCategoryIds)) {
+            throw new BusinessException("One or more sub-categories do not exist or are inactive.");
+        }
+
+        List<String> slugs = requests.stream()
+                .map(CreateProductRequest::getSlug)
+                .toList();
+        if (slugs.size() != requests.size() || slugs.size() != productRepository.countActiveBySlugs(slugs)) {
+            throw new BusinessException("One or more slugs are duplicate or already exist.");
+        }
+        List<Long> promotionIds = requests.stream()
+                .flatMap(r -> r.getPromotionIds() != null ? r.getPromotionIds().stream() : null)
+                .distinct()
+                .toList();
+        if (promotionIds.size() != promotionRepository.countActiveByIds(promotionIds)) {
+            throw new BusinessException("One or more promotions do not exist or are inactive.");
+        }
     }
 }

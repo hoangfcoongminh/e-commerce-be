@@ -3,6 +3,8 @@ package com.edward.order.dto;
 import com.edward.order.entity.Product;
 import lombok.*;
 
+import java.util.List;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -19,7 +21,8 @@ public class ProductDto {
     private Integer stock;
     private String slug;
     private Integer status;
-    private PromotionDto promotion;
+    private List<PromotionDto> promotions;
+    private List<ImageDto> images;
 
     public static Product of(ProductDto dto) {
         return Product.builder()

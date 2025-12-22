@@ -27,6 +27,8 @@ public class PromotionDto {
 
     private LocalDateTime endDate;
 
+    private boolean isBestDeal;
+
     public static PromotionDto toDto(Promotion promotion) {
         return PromotionDto.builder()
                 .id(promotion.getId())

@@ -13,4 +13,10 @@ public interface PromotionRepository extends JpaRepository<Promotion, Long> {
             "WHERE p.id IN :promotionIds " +
             "AND p.status = 1")
     List<Promotion> findAllByIdIn(List<Long> id);
+
+    @Query(value = "SELECT p " +
+            "FROM Promotion p " +
+            "WHERE p.id IN :promotionIds " +
+            "AND p.status = 1")
+    Long countActiveByIds(List<Long> promotionIds);
 }

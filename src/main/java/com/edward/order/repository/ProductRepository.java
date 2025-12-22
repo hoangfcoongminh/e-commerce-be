@@ -29,4 +29,10 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             Pageable pageable
     );
 
+    @Query(value = "SELECT COUNT(p) " +
+            "FROM Product p " +
+            "WHERE p.slug IN :slugs " +
+            "AND p.status = 1")
+    Long countActiveBySlugs(List<String> slugs);
+
 }

@@ -11,7 +11,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.time.LocalDateTime;
 
-public class ResponseUtils {
+public final class ResponseUtils {
 
     public static HttpServletRequest getCurrentRequest() {
         ServletRequestAttributes attrs =

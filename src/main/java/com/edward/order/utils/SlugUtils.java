@@ -2,7 +2,7 @@ package com.edward.order.utils;
 
 import java.text.Normalizer;
 
-public class SlugUtils {
+public final class SlugUtils {
 
     public static String toSlug(String input) {
         //Chuẩn hóa Unicode - Bỏ dấu
