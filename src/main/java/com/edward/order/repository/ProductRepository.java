@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
@@ -29,10 +30,14 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             Pageable pageable
     );
 
-    @Query(value = "SELECT COUNT(p) " +
+    boolean existsBySlugInAndStatus(List<String> slugs, Integer status);
+
+    @Query(value = "SELECT p " +
             "FROM Product p " +
-            "WHERE p.slug IN :slugs " +
+            "WHERE p.id = :id " +
             "AND p.status = 1")
-    Long countActiveBySlugs(List<String> slugs);
+    Optional<Product> findByIdAndActive(Long id);
+
+    List<Product> findAllByIdIn(List<Long> ids);
 
 }

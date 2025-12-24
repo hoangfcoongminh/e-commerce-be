@@ -1,10 +1,8 @@
 package com.edward.order.controller.admin;
 
-import com.edward.order.dto.request.CreateProductRequest;
 import com.edward.order.dto.request.SearchProductRequest;
 import com.edward.order.service.ProductService;
 import com.edward.order.utils.ResponseUtils;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +23,13 @@ public class ProductAdminController {
         return ResponseUtils.success(productService.getAll(pageable));
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getById(
+            @PathVariable Long id
+    ) {
+        return ResponseUtils.success(productService.getById(id));
+    }
+
     @PostMapping("/search")
     public ResponseEntity<?> search(
             @RequestBody SearchProductRequest request,
@@ -39,5 +44,20 @@ public class ProductAdminController {
             @RequestPart("files") List<MultipartFile> images
     ) {
         return ResponseUtils.success(productService.createProducts(requestsJson, images));
+    }
+
+    @PutMapping()
+    public ResponseEntity<?> update(
+            @RequestPart("request") String requestJson,
+            @RequestPart(value = "files", required = false) List<MultipartFile> images
+    ) {
+        return ResponseUtils.success(productService.updateProduct(requestJson, images));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(
+            @RequestBody List<Long> ids
+    ) {
+        return ResponseUtils.success(productService.delete(ids));
     }
 }

@@ -19,4 +19,6 @@ public interface PromotionRepository extends JpaRepository<Promotion, Long> {
             "WHERE p.id IN :promotionIds " +
             "AND p.status = 1")
     Long countActiveByIds(List<Long> promotionIds);
+
+    boolean existsByIdInAndStatus(List<Long> ids, Integer status);
 }

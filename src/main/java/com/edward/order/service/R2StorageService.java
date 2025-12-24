@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -84,4 +84,57 @@ public class R2StorageService {
     private String buildPublicUrl(String key) {
         return endpoint + "/" + bucketName + "/" + key;
     }
+
+    public void deleteImageByKey(String key) {
+        DeleteObjectRequest request = DeleteObjectRequest.builder()
+                .bucket(bucketName)
+                .key(key)
+                .build();
+
+        r2Client.deleteObject(request);
+    }
+
+    public void deleteImagesByKeys(List<String> keys) {
+
+        if (keys == null || keys.isEmpty()) {
+            return;
+        }
+
+        List<ObjectIdentifier> objects = keys.stream()
+                .map(key -> ObjectIdentifier.builder().key(key).build())
+                .toList();
+
+        DeleteObjectsRequest request = DeleteObjectsRequest.builder()
+                .bucket(bucketName)
+                .delete(Delete.builder().objects(objects).build())
+                .build();
+
+        r2Client.deleteObjects(request);
+    }
+
+    private List<String> listKeysByPrefix(String prefix) {
+
+        ListObjectsV2Request request = ListObjectsV2Request.builder()
+                .bucket(bucketName)
+                .prefix(prefix)
+                .build();
+
+        ListObjectsV2Response response = r2Client.listObjectsV2(request);
+
+        return response.contents()
+                .stream()
+                .map(S3Object::key)
+                .toList();
+    }
+
+    public void deleteImagesByProductId(Long productId) {
+        String prefix = "products/" + productId + "/";
+        List<String> keys = listKeysByPrefix(prefix);
+        deleteImagesByKeys(keys);
+    }
+
+    private String extractKeyFromUrl(String url) {
+        return url.substring(url.indexOf(bucketName) + bucketName.length() + 1);
+    }
+
 }

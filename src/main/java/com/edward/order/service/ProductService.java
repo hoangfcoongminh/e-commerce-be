@@ -2,7 +2,7 @@ package com.edward.order.service;
 
 import com.edward.order.dto.ProductDto;
 import com.edward.order.dto.PromotionDto;
-import com.edward.order.dto.request.CreateProductRequest;
+import com.edward.order.dto.request.ProductRequest;
 import com.edward.order.dto.request.SearchProductRequest;
 import com.edward.order.entity.Product;
 import com.edward.order.entity.ProductImage;
@@ -13,6 +13,7 @@ import com.edward.order.exception.BusinessException;
 import com.edward.order.repository.*;
 import com.edward.order.utils.JsonMapperUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -45,6 +46,13 @@ public class ProductService {
         return new PageImpl<>(response, pageable, data.getTotalElements());
     }
 
+    public ProductDto getById(Long id) {
+        Product product = productRepository.findByIdAndActive(id)
+                .orElseThrow(() -> new BusinessException("Product not found"));
+        List<ProductDto> response = toResponse(List.of(product));
+        return response.get(0);
+    }
+
     public Page<ProductDto> search(SearchProductRequest request, Pageable pageable) {
         String search = (request.getSearch() == null || request.getSearch().isBlank()) ? null : request.getSearch().toLowerCase();
 
@@ -63,7 +71,7 @@ public class ProductService {
         List<Long> productIds = products.stream()
                 .map(Product::getId)
                 .toList();
-        List<PromotionProduct> promotionProducts = promotionProductRepository.findAllByProductIds(productIds);
+        List<PromotionProduct> promotionProducts = promotionProductRepository.findAllByProductIdIn(productIds);
 
         Map<Long, List<Promotion>> promotionMap = null;
         if (!promotionProducts.isEmpty()) {
@@ -130,23 +138,24 @@ public class ProductService {
                 ));
     }
 
+    @Transactional
     public List<ProductDto> createProducts(String jsonRequests, List<MultipartFile> files) {
         // Parse JSON requests
-        List<CreateProductRequest> requests =
+        List<ProductRequest> requests =
                 JsonMapperUtils.mapper(
                         jsonRequests,
-                        new TypeReference<List<CreateProductRequest>>() {}
+                        new TypeReference<List<ProductRequest>>() {
+                        }
                 );
 
         // Validate requests
-        validateCreateProducts(requests);
+        validateProduct(requests);
 
         // Save products
         List<Product> products = new ArrayList<>();
-        for (CreateProductRequest request : requests) {
-            Product p = CreateProductRequest.of(request);
+        for (ProductRequest request : requests) {
+            Product p = ProductRequest.of(request);
             p.setId(null);
-            p.setStatus(EntityStatus.ACTIVE.getValue());
             products.add(p);
         }
         products = productRepository.saveAll(products);
@@ -193,12 +202,12 @@ public class ProductService {
         return toResponse(products);
     }
 
-    private void validateCreateProducts(List<CreateProductRequest> requests) {
+    private void validateProduct(List<ProductRequest> requests) {
         if (requests.isEmpty()) {
             throw new BusinessException("Request list cannot be empty.");
         }
         List<Long> subCategoryIds = requests.stream()
-                .map(CreateProductRequest::getSubCategoryId)
+                .map(ProductRequest::getSubCategoryId)
                 .distinct()
                 .toList();
         if (subCategoryIds.size() != subCategoryRepository.countActiveByCategoryIds(subCategoryIds)) {
@@ -206,17 +215,85 @@ public class ProductService {
         }
 
         List<String> slugs = requests.stream()
-                .map(CreateProductRequest::getSlug)
+                .map(ProductRequest::getSlug)
                 .toList();
-        if (slugs.size() != requests.size() || slugs.size() != productRepository.countActiveBySlugs(slugs)) {
+        if (slugs.size() != requests.size() || productRepository.existsBySlugInAndStatus(slugs, EntityStatus.ACTIVE.getValue())) {
             throw new BusinessException("One or more slugs are duplicate or already exist.");
         }
         List<Long> promotionIds = requests.stream()
                 .flatMap(r -> r.getPromotionIds() != null ? r.getPromotionIds().stream() : null)
                 .distinct()
                 .toList();
-        if (promotionIds.size() != promotionRepository.countActiveByIds(promotionIds)) {
+        if (promotionIds != null && !promotionIds.isEmpty() && !promotionRepository.existsByIdInAndStatus(promotionIds, EntityStatus.ACTIVE.getValue())) {
             throw new BusinessException("One or more promotions do not exist or are inactive.");
         }
+    }
+
+    @Transactional
+    public ProductDto updateProduct(String jsonRequests, List<MultipartFile> files) {
+
+        // Parse JSON request
+        ProductRequest request = JsonMapperUtils.mapper(jsonRequests, ProductRequest.class);
+
+        // Validate request
+        validateProduct(List.of(request));
+
+        // Update product
+        Product product = productRepository.findByIdAndActive(request.getId()).orElseThrow(() -> new BusinessException("Product not found"));
+        product.setSubCategoryId(request.getSubCategoryId());
+        product.setName(request.getName());
+        product.setDescription(request.getDescription());
+        product.setOriginalPrice(request.getOriginalPrice());
+        product.setStock(request.getStock());
+        product.setSlug(request.getSlug());
+        product.setStatus(request.getStatus() != null ? request.getStatus() : EntityStatus.ACTIVE.getValue());
+        product = productRepository.save(product);
+
+
+        // Handle promotions
+        List<Long> existedPromotionIds = promotionProductRepository.findAllByProductId(product.getId())
+                .stream()
+                .map(PromotionProduct::getPromotionId)
+                .toList();
+
+        List<Long> needDeletedPromotionIds = existedPromotionIds.stream()
+                .filter(id -> !request.getPromotionIds().contains(id))
+                .toList();
+        promotionProductRepository.deleteAllById(needDeletedPromotionIds);
+
+        List<Long> needAddedPromotionIds = request.getPromotionIds().stream()
+                .filter(id -> !existedPromotionIds.contains(id))
+                .toList();
+
+        List<PromotionProduct> promotionProducts = new ArrayList<>();
+        for (Long promotionId : needAddedPromotionIds) {
+            PromotionProduct pp = new PromotionProduct(null, promotionId, product.getId());
+            promotionProducts.add(pp);
+        }
+        promotionProductRepository.saveAll(promotionProducts);
+
+        // Handle images
+
+
+        return null;
+
+    }
+
+    @Transactional
+    public String delete(List<Long> ids) {
+        // Delete products
+        List<Product> products = productRepository.findAllByIdIn(ids);
+        productRepository.deleteAll(products);
+
+        // Delete product from promotions
+        List<PromotionProduct> promotionProducts = promotionProductRepository.findAllByProductIdIn(ids);
+        promotionProductRepository.deleteAll(promotionProducts);
+
+        // Handle images
+
+        List<ProductImage> productImages = productImageRepository.findAllByProductIdIn(ids);
+        productImageRepository.deleteAll(productImages);
+
+        return "success";
     }
 }
