@@ -8,6 +8,7 @@ import com.edward.order.entity.User;
 import com.edward.order.exception.BusinessException;
 import com.edward.order.repository.UserRepository;
 import com.edward.order.security.JwtService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,11 +21,11 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
+    @Transactional
     public RegisterResponse register(RegisterRequest registerRequest) {
         validateRegister(registerRequest);
         User user = RegisterRequest.of(registerRequest);
         user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
-
         user = userRepository.save(user);
 
         String token = jwtService.generateToken(user);

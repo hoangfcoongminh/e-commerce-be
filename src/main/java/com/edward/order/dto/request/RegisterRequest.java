@@ -3,8 +3,6 @@ package com.edward.order.dto.request;
 import com.edward.order.entity.User;
 import com.edward.order.enums.Gender;
 import com.edward.order.enums.Role;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -15,8 +13,8 @@ import lombok.Setter;
 @Setter
 public class RegisterRequest {
 
-    @Email(message = "Email not valid")
     @NotBlank(message = "Email is required")
+    @Email(message = "Email not valid")
     private String email;
 
     @NotBlank(message = "Password is required")

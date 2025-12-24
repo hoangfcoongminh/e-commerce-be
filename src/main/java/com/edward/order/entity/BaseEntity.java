@@ -37,6 +37,8 @@ public abstract class BaseEntity {
     @LastModifiedBy
     private String updatedBy;
 
+    private Integer status;
+
     @Version
     private Long version;
 
