@@ -38,8 +38,6 @@ public class ProductService {
     private final R2StorageService r2StorageService;
     private final ProductImageRepository productImageRepository;
 
-    private static final String PRODUCT_IMAGE_FOLDER = "products";
-
     public Page<ProductDto> getAll(Pageable pageable) {
         Page<Product> data = productRepository.findAllAndActive(pageable);
         List<ProductDto> response = toResponse(data.getContent());
@@ -189,7 +187,7 @@ public class ProductService {
                         imagesToUpload.add(imagesMap.get(imageName));
                     }
                 }
-                Map<String, String> imageUrlMap = r2StorageService.bulkUpload(imagesToUpload, PRODUCT_IMAGE_FOLDER + "/" + products.get(i).getId());
+                Map<String, String> imageUrlMap = r2StorageService.bulkUpload(imagesToUpload, R2StorageService.PRODUCT_IMAGE_FOLDER + "/" + products.get(i).getId());
                 for (String imageName : imageNamesOfProduct) {
                     ProductImage productImage = new ProductImage();
                     productImage.setProductId(products.get(i).getId());
@@ -273,7 +271,9 @@ public class ProductService {
         promotionProductRepository.saveAll(promotionProducts);
 
         // Handle images
-
+        r2StorageService.deleteImagesByProductId(request.getId());
+        List<ProductImage> existingImages = productImageRepository.findAllByProductId(request.getId());
+        productImageRepository.deleteAll(existingImages);
 
         return null;
 
@@ -290,6 +290,11 @@ public class ProductService {
         promotionProductRepository.deleteAll(promotionProducts);
 
         // Handle images
+        for(Long id : ids) {
+            r2StorageService.deleteImagesByProductId(id);
+        }
+        List<ProductImage> existingImages = productImageRepository.findAllByProductIdIn(ids);
+        productImageRepository.deleteAll(existingImages);
 
         List<ProductImage> productImages = productImageRepository.findAllByProductIdIn(ids);
         productImageRepository.deleteAll(productImages);

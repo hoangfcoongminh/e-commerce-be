@@ -26,6 +26,8 @@ public class R2StorageService {
     @Value("${cloudflare.r2.endpoint}")
     private String endpoint;
 
+    public static final String PRODUCT_IMAGE_FOLDER = "products";
+
     public String uploadImage(MultipartFile file, String folder) {
         try {
             String fileName = UUID.randomUUID() + "-" + file.getOriginalFilename();
@@ -68,7 +70,6 @@ public class R2StorageService {
         return result;
     }
 
-
     private String upload(byte[] data, String contentType, String key) {
         PutObjectRequest request = PutObjectRequest.builder()
                 .bucket(bucketName)
@@ -79,7 +80,6 @@ public class R2StorageService {
         r2Client.putObject(request, RequestBody.fromBytes(data));
         return buildPublicUrl(key);
     }
-
 
     private String buildPublicUrl(String key) {
         return endpoint + "/" + bucketName + "/" + key;
@@ -128,7 +128,7 @@ public class R2StorageService {
     }
 
     public void deleteImagesByProductId(Long productId) {
-        String prefix = "products/" + productId + "/";
+        String prefix = PRODUCT_IMAGE_FOLDER + "/" + productId + "/";
         List<String> keys = listKeysByPrefix(prefix);
         deleteImagesByKeys(keys);
     }
