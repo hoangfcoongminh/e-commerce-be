@@ -55,7 +55,7 @@ public class CategoryService {
 
     @Transactional
     public CategoryDto create(CategoryDto dto) {
-        String slug = SlugUtils.toSlug(dto.getName());
+        String slug = SlugUtils.generateUniqueSlug(dto.getName(), categoryRepository);
         if (categoryRepository.findBySlugAndActive(slug).isPresent()) {
             throw new BusinessException("category.invalid");
         }
@@ -73,7 +73,7 @@ public class CategoryService {
         Category c = validate(dto);
         c.setName(dto.getName());
         c.setDescription(dto.getDescription());
-        c.setSlug(SlugUtils.toSlug(dto.getName()));
+        c.setSlug(SlugUtils.generateUniqueSlug(dto.getName(), categoryRepository));
         c.setStatus(dto.getStatus() != null ? c.getStatus() : EntityStatus.ACTIVE.getValue());
         c = categoryRepository.save(c);
 
@@ -85,7 +85,7 @@ public class CategoryService {
             throw new BusinessException("category.invalid");
         }
         Category c = categoryRepository.findByIdAndActive(dto.getId()).orElseThrow(() -> new BusinessException("category.not.found"));
-        String slug = SlugUtils.toSlug(dto.getName());
+        String slug = SlugUtils.generateUniqueSlug(dto.getName(), categoryRepository);
         if (!slug.equals(c.getSlug()) && categoryRepository.findBySlugAndActive(slug).isPresent()) {
             throw new BusinessException("category.name.invalid");
         }

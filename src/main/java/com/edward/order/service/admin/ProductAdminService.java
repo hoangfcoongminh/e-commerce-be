@@ -1,4 +1,4 @@
-package com.edward.order.service;
+package com.edward.order.service.admin;
 
 import com.edward.order.dto.ProductDto;
 import com.edward.order.dto.PromotionDto;
@@ -11,6 +11,7 @@ import com.edward.order.entity.PromotionProduct;
 import com.edward.order.enums.EntityStatus;
 import com.edward.order.exception.BusinessException;
 import com.edward.order.repository.*;
+import com.edward.order.service.R2StorageService;
 import com.edward.order.utils.JsonMapperUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.transaction.Transactional;
@@ -29,7 +30,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class ProductService {
+public class ProductAdminService {
 
     private final ProductRepository productRepository;
     private final PromotionProductRepository promotionProductRepository;
@@ -65,7 +66,7 @@ public class ProductService {
         return new PageImpl<>(response, pageable, data.getTotalElements());
     }
 
-    private List<ProductDto> toResponse(List<Product> products) {
+    public List<ProductDto> toResponse(List<Product> products) {
         List<Long> productIds = products.stream()
                 .map(Product::getId)
                 .toList();

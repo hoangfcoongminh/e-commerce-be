@@ -4,8 +4,10 @@ import com.edward.order.dto.request.LoginRequest;
 import com.edward.order.dto.request.RegisterRequest;
 import com.edward.order.dto.response.LoginResponse;
 import com.edward.order.dto.response.RegisterResponse;
+import com.edward.order.entity.Cart;
 import com.edward.order.entity.User;
 import com.edward.order.exception.BusinessException;
+import com.edward.order.repository.CartRepository;
 import com.edward.order.repository.UserRepository;
 import com.edward.order.security.JwtService;
 import jakarta.transaction.Transactional;
@@ -20,6 +22,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final CartRepository cartRepository;
 
     @Transactional
     public RegisterResponse register(RegisterRequest registerRequest) {
@@ -29,6 +32,9 @@ public class AuthService {
         user = userRepository.save(user);
 
         String token = jwtService.generateToken(user);
+
+        Cart cart = new Cart(null, user.getId());
+        cartRepository.save(cart);
 
         return RegisterResponse.toResponse(user, token);
     }

@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 import java.util.Optional;
 
-public interface ProductRepository extends JpaRepository<Product, Long> {
+public interface ProductRepository extends JpaRepository<Product, Long>, SlugRepository {
 
     List<Product> findAllBySubCategoryIdIn(List<Long> ids);
 
@@ -40,4 +40,18 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     List<Product> findAllByIdIn(List<Long> ids);
 
+    @Query(value = "SELECT p " +
+            "FROM Product p " +
+            "WHERE (:subCategoryIds IS NULL OR p.subCategoryId IN :subCategoryIds) " +
+            "AND (:keyword IS NULL OR LOWER(p.name) LIKE CONCAT('%', :keyword, '%') " +
+            "OR LOWER(p.description) LIKE CONCAT('%', :keyword, '%')) " +
+            "AND p.originalPrice BETWEEN :minPrice AND :maxPrice " +
+            "AND p.status = 1")
+    Page<Product> filterProducts(
+            List<Long> subCategoryIds,
+            String keyword,
+            Long minPrice,
+            Long maxPrice,
+            Pageable pageable
+    );
 }

@@ -56,7 +56,7 @@ public class SubCategoryService {
         if (categoryRepository.findByIdAndActive(dto.getCategoryId()).isEmpty()) {
             throw new BusinessException("category.not.found");
         }
-        String slug = SlugUtils.toSlug(dto.getName());
+        String slug = SlugUtils.generateUniqueSlug(dto.getName(), subCategoryRepository);
         if (subCategoryRepository.findBySlugAndActive(slug).isPresent()) {
             throw new BusinessException("sub.category.invalid");
         }
@@ -75,7 +75,7 @@ public class SubCategoryService {
         s.setCategoryId(dto.getCategoryId());
         s.setName(dto.getName());
         s.setDescription(dto.getDescription());
-        s.setSlug(SlugUtils.toSlug(dto.getName()));
+        s.setSlug(SlugUtils.generateUniqueSlug(dto.getName(), subCategoryRepository));
         s.setStatus(dto.getStatus() != null ? s.getStatus() : EntityStatus.ACTIVE.getValue());
         s = subCategoryRepository.save(s);
 
@@ -90,7 +90,7 @@ public class SubCategoryService {
             throw new BusinessException("category.not.found");
         }
         SubCategory c = subCategoryRepository.findByIdAndActive(dto.getId()).orElseThrow(() -> new BusinessException("sub.category.not.found"));
-        String slug = SlugUtils.toSlug(dto.getName());
+        String slug = SlugUtils.generateUniqueSlug(dto.getName(), subCategoryRepository);
         if (!slug.equals(c.getSlug()) && subCategoryRepository.findBySlugAndActive(slug).isPresent()) {
             throw new BusinessException("category.name.invalid");
         }

@@ -1,10 +1,12 @@
 package com.edward.order.utils;
 
+import com.edward.order.repository.SlugRepository;
+
 import java.text.Normalizer;
 
 public final class SlugUtils {
 
-    public static String toSlug(String input) {
+    private String toSlug(String input) {
         //Chuẩn hóa Unicode - Bỏ dấu
         String noAccent = Normalizer.normalize(input, Normalizer.Form.NFD)
                 .replaceAll("\\p{M}", "");
@@ -20,5 +22,19 @@ public final class SlugUtils {
 
         //Xóa dấu gạch "-" dư
         return hyphen.replaceAll("-{2,}", "-");
+    }
+
+    public static <R extends SlugRepository> String generateUniqueSlug(String input, R repository) {
+
+        String baseSlug = new SlugUtils().toSlug(input);
+        String slug = baseSlug;
+        int i = 1;
+
+        while (repository.existsBySlug(slug)) {
+            slug = baseSlug + "-" + i;
+            i++;
+        }
+
+        return slug;
     }
 }
