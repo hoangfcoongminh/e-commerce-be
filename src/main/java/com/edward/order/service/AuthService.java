@@ -1,9 +1,9 @@
 package com.edward.order.service;
 
+import com.edward.order.dto.UserDto;
 import com.edward.order.dto.request.LoginRequest;
 import com.edward.order.dto.request.RegisterRequest;
-import com.edward.order.dto.response.LoginResponse;
-import com.edward.order.dto.response.RegisterResponse;
+import com.edward.order.dto.response.AuthResponse;
 import com.edward.order.entity.Cart;
 import com.edward.order.entity.User;
 import com.edward.order.exception.BusinessException;
@@ -25,21 +25,27 @@ public class AuthService {
     private final CartRepository cartRepository;
 
     @Transactional
-    public RegisterResponse register(RegisterRequest registerRequest) {
+    public AuthResponse register(RegisterRequest registerRequest) {
         validateRegister(registerRequest);
         User user = RegisterRequest.of(registerRequest);
         user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
         user = userRepository.save(user);
 
         String token = jwtService.generateToken(user);
+        String refreshToken = jwtService.generateRefreshToken(user);
 
         Cart cart = new Cart(null, user.getId());
         cartRepository.save(cart);
 
-        return RegisterResponse.toResponse(user, token);
+        AuthResponse response = new AuthResponse();
+        response.setToken(token);
+        response.setRefreshToken(refreshToken);
+        response.setUser(UserDto.toDto(user));
+
+        return response;
     }
 
-    public LoginResponse login(LoginRequest loginRequest) {
+    public AuthResponse login(LoginRequest loginRequest) {
         User user = userRepository.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new BusinessException("Invalid email or password"));
 
@@ -48,8 +54,14 @@ public class AuthService {
         }
 
         String token = jwtService.generateToken(user);
+        String refreshToken = jwtService.generateRefreshToken(user);
 
-        return LoginResponse.toResponse(user, token);
+        AuthResponse response = new AuthResponse();
+        response.setToken(token);
+        response.setRefreshToken(refreshToken);
+        response.setUser(UserDto.toDto(user));
+
+        return response;
     }
 
     public void validateRegister(RegisterRequest registerRequest) {
