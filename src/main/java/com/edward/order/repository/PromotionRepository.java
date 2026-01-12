@@ -12,7 +12,7 @@ public interface PromotionRepository extends JpaRepository<Promotion, Long> {
             "FROM Promotion p " +
             "WHERE p.id IN :promotionIds " +
             "AND p.status = 1")
-    List<Promotion> findAllByIdIn(List<Long> id);
+    List<Promotion> findAllByIdIn(List<Long> promotionIds);
 
     @Query(value = "SELECT p " +
             "FROM Promotion p " +
