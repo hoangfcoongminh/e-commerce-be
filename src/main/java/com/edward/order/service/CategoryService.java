@@ -1,6 +1,7 @@
 package com.edward.order.service;
 
 import com.edward.order.dto.CategoryDto;
+import com.edward.order.dto.SubCategoryDto;
 import com.edward.order.entity.Category;
 import com.edward.order.entity.Product;
 import com.edward.order.entity.SubCategory;
@@ -19,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -108,5 +110,17 @@ public class CategoryService {
         productRepository.deleteAll(products);
 
         return "success";
+    }
+
+    public List<CategoryDto> getAllWithSubCategories() {
+        List<CategoryDto> categoryDtos = getAllAndActive();
+        List<SubCategory> subCategories = subCategoryRepository.findAllAndActive();
+        Map<Long, List<SubCategoryDto>> subCategoryDtoMap = subCategories.stream()
+                .map(SubCategoryDto::toDto)
+                .collect(java.util.stream.Collectors.groupingBy(SubCategoryDto::getCategoryId));
+        for (CategoryDto categoryDto : categoryDtos) {
+            categoryDto.setSubCategories(subCategoryDtoMap.get(categoryDto.getId()));
+        }
+        return categoryDtos;
     }
 }

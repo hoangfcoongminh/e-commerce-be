@@ -5,6 +5,8 @@ import com.edward.order.enums.EntityStatus;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
+import java.util.List;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -19,6 +21,8 @@ public class CategoryDto {
     private String description;
     private String slug;
     private Integer status;
+
+    private List<SubCategoryDto> subCategories;
 
     public static Category of(CategoryDto dto) {
         return Category.builder()

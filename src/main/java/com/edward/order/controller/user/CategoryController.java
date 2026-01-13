@@ -19,4 +19,9 @@ public class CategoryController {
     public ResponseEntity<?> getAll() {
         return ResponseUtils.success(categoryService.getAllAndActive());
     }
+
+    @GetMapping("/sub-categories")
+    public ResponseEntity<?> getAllWithSubCategories() {
+        return ResponseUtils.success(categoryService.getAllWithSubCategories());
+    }
 }
