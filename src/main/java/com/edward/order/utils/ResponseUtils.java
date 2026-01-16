@@ -38,6 +38,7 @@ public final class ResponseUtils {
             Pagination paging = Pagination.builder()
                     .page(page.getNumber())
                     .size(page.getSize())
+                    .sort(page.getSort().toString())
                     .totalElements(page.getTotalElements())
                     .totalPages(page.getTotalPages())
                     .build();

@@ -175,29 +175,31 @@ public class ProductAdminService {
         }
 
         // Handle images
-        Map<String, MultipartFile> imagesMap = files.stream()
-                .collect(Collectors.toMap(MultipartFile::getOriginalFilename, f -> f));
+        if (files != null && !files.isEmpty()) {
+            Map<String, MultipartFile> imagesMap = files.stream()
+                    .collect(Collectors.toMap(MultipartFile::getOriginalFilename, f -> f));
 
-        List<ProductImage> productImages = new ArrayList<>();
-        for (int i = 0; i < requests.size(); i++) {
-            List<String> imageNamesOfProduct = requests.get(i).getImageNames();
-            List<MultipartFile> imagesToUpload = new ArrayList<>();
-            if (imageNamesOfProduct != null) {
-                for (String imageName : imageNamesOfProduct) {
-                    if (imagesMap.containsKey(imageName)) {
-                        imagesToUpload.add(imagesMap.get(imageName));
+            List<ProductImage> productImages = new ArrayList<>();
+            for (int i = 0; i < requests.size(); i++) {
+                List<String> imageNamesOfProduct = requests.get(i).getImageNames();
+                List<MultipartFile> imagesToUpload = new ArrayList<>();
+                if (imageNamesOfProduct != null) {
+                    for (String imageName : imageNamesOfProduct) {
+                        if (imagesMap.containsKey(imageName)) {
+                            imagesToUpload.add(imagesMap.get(imageName));
+                        }
+                    }
+                    Map<String, String> imageUrlMap = r2StorageService.bulkUpload(imagesToUpload, R2StorageService.PRODUCT_IMAGE_FOLDER + "/" + products.get(i).getId());
+                    for (String imageName : imageNamesOfProduct) {
+                        ProductImage productImage = new ProductImage();
+                        productImage.setProductId(products.get(i).getId());
+                        productImage.setUrl(imageUrlMap.get(imageName));
+                        productImages.add(productImage);
                     }
                 }
-                Map<String, String> imageUrlMap = r2StorageService.bulkUpload(imagesToUpload, R2StorageService.PRODUCT_IMAGE_FOLDER + "/" + products.get(i).getId());
-                for (String imageName : imageNamesOfProduct) {
-                    ProductImage productImage = new ProductImage();
-                    productImage.setProductId(products.get(i).getId());
-                    productImage.setUrl(imageUrlMap.get(imageName));
-                    productImages.add(productImage);
-                }
             }
+            productImageRepository.saveAll(productImages);
         }
-        productImageRepository.saveAll(productImages);
         return toResponse(products);
     }
 
@@ -209,7 +211,7 @@ public class ProductAdminService {
                 .map(ProductRequest::getSubCategoryId)
                 .distinct()
                 .toList();
-        if (subCategoryIds.size() != subCategoryRepository.countActiveByCategoryIds(subCategoryIds)) {
+        if (subCategoryIds.size() != subCategoryRepository.countActiveBySubCategoryIds(subCategoryIds)) {
             throw new BusinessException("One or more sub-categories do not exist or are inactive.");
         }
 

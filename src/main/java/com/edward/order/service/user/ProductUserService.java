@@ -7,6 +7,7 @@ import com.edward.order.dto.request.FilterProductRequest;
 import com.edward.order.entity.Cart;
 import com.edward.order.entity.CartDetail;
 import com.edward.order.entity.Product;
+import com.edward.order.exception.BusinessException;
 import com.edward.order.repository.CartDetailRepository;
 import com.edward.order.repository.CartRepository;
 import com.edward.order.repository.ProductRepository;
@@ -46,7 +47,8 @@ public class ProductUserService {
     public Page<ProductDto> filter(FilterProductRequest request, Pageable pageable) {
         List<Long> subCategoryIds = request.getSubCategoryIds() == null || request.getSubCategoryIds().isEmpty() ? null : request.getSubCategoryIds();
         String keyword = request.getKeyword() == null || request.getKeyword().isBlank() ? null : request.getKeyword().toLowerCase();
-        if (request.getMinPrice() > request.getMaxPrice()) {
+
+        if (request.getMinPrice() != null && request.getMaxPrice() != null && request.getMinPrice() > request.getMaxPrice()) {
             throw new RuntimeException("invalid.price.range");
         }
 
@@ -63,18 +65,5 @@ public class ProductUserService {
         return new PageImpl<>(response, pageable, data.getTotalElements());
     }
 
-    @Transactional
-    public CartDto addToCart(Long productId, Integer quantity) {
-        Long currentUserId = SecurityUtils.getCurrentUserId();
 
-        Cart cart = cartRepository.findByUserId(currentUserId);
-        List<CartDetail> cartDetail = cartDetailRepository.findAllByCartId(cart.getId());
-
-        CartDto cartDto = new CartDto();
-        cartDto.setId(cart.getId());
-        cartDto.setUserId(cart.getUserId());
-        cartDto.setCartDetails(cartDetail.stream().map(CartDetailDto::toDto).toList());
-
-        return cartDto;
-    }
 }

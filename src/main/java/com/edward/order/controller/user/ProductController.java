@@ -30,19 +30,11 @@ public class ProductController {
         return ResponseUtils.success(productUserService.getById(id));
     }
 
-    @GetMapping("/filter")
+    @PostMapping("/filter")
     public ResponseEntity<?> filter (
             @RequestBody FilterProductRequest request,
             Pageable pageable
     ) {
         return ResponseUtils.success(productUserService.filter(request, pageable));
-    }
-
-    @PostMapping("/add-to-cart/{productId}")
-    public ResponseEntity<?> addToCart(
-            @PathVariable Long productId,
-            @RequestParam Integer quantity
-    ) {
-        return ResponseUtils.success(productUserService.addToCart(productId, quantity));
     }
 }

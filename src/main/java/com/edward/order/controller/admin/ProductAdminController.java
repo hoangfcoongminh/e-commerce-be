@@ -41,7 +41,7 @@ public class ProductAdminController {
     @PostMapping("/bulk-create")
     public ResponseEntity<?> create(
             @RequestPart("requests") String requestsJson,
-            @RequestPart("files") List<MultipartFile> images
+            @RequestPart(value = "files", required = false) List<MultipartFile> images
     ) {
         return ResponseUtils.success(productAdminService.createProducts(requestsJson, images));
     }
@@ -54,7 +54,7 @@ public class ProductAdminController {
         return ResponseUtils.success(productAdminService.updateProduct(requestJson, images));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping()
     public ResponseEntity<?> delete(
             @RequestBody List<Long> ids
     ) {
