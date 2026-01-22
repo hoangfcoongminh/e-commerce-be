@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 import java.util.Optional;
 
-public interface SubCategoryRepository extends JpaRepository<SubCategory, Long> {
+public interface SubCategoryRepository extends JpaRepository<SubCategory, Long>, SlugRepository {
 
     List<SubCategory> findAllByCategoryId(Long id);
 
@@ -39,9 +39,9 @@ public interface SubCategoryRepository extends JpaRepository<SubCategory, Long> 
             "AND (c.status IS NULL OR c.status = :status)")
     Page<SubCategory> search(String search, List<Long> categoryIds, Integer status, Pageable pageable);
 
-    @Query(value = "SELECT COUNT(c) " +
-            "FROM SubCategory c " +
-            "WHERE c.categoryId IN :subCategoryIds " +
-            "AND c.status = 1 ")
-    Long countActiveByCategoryIds(List<Long> subCategoryIds);
+    @Query(value = "SELECT COUNT(s) " +
+            "FROM SubCategory s " +
+            "WHERE s.id IN :subCategoryIds " +
+            "AND s.status = 1 ")
+    Long countActiveBySubCategoryIds(List<Long> subCategoryIds);
 }

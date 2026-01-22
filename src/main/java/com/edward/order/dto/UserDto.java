@@ -1,34 +1,31 @@
-package com.edward.order.dto.response;
+package com.edward.order.dto;
 
 import com.edward.order.entity.User;
 import com.edward.order.enums.Gender;
 import com.edward.order.enums.Role;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder
-public class RegisterResponse {
+public class UserDto {
 
+//    private Long id;
     private String email;
-    private String token;
-
+    private String password;
     private String fullName;
-
     private String phoneNumber;
-
     private String address;
-
     private Gender gender;
-
     private Role role;
 
-    public static RegisterResponse toResponse(User user, String token) {
-        return RegisterResponse.builder()
+    public static UserDto toDto(User user) {
+        return UserDto.builder()
+//                .id(user.getId())
                 .email(user.getEmail())
-                .token(token)
+                .password(user.getPassword())
                 .fullName(user.getFullName())
                 .phoneNumber(user.getPhoneNumber())
                 .address(user.getAddress())

@@ -1,7 +1,7 @@
 package com.edward.order.controller.admin;
 
 import com.edward.order.dto.request.SearchProductRequest;
-import com.edward.order.service.ProductService;
+import com.edward.order.service.admin.ProductAdminService;
 import com.edward.order.utils.ResponseUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -16,18 +16,18 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProductAdminController {
 
-    private final ProductService productService;
+    private final ProductAdminService productAdminService;
 
     @GetMapping()
     public ResponseEntity<?> getAll(Pageable pageable) {
-        return ResponseUtils.success(productService.getAll(pageable));
+        return ResponseUtils.success(productAdminService.getAll(pageable));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getById(
             @PathVariable Long id
     ) {
-        return ResponseUtils.success(productService.getById(id));
+        return ResponseUtils.success(productAdminService.getById(id));
     }
 
     @PostMapping("/search")
@@ -35,15 +35,15 @@ public class ProductAdminController {
             @RequestBody SearchProductRequest request,
             Pageable pageable
     ) {
-        return ResponseUtils.success(productService.search(request, pageable));
+        return ResponseUtils.success(productAdminService.search(request, pageable));
     }
 
     @PostMapping("/bulk-create")
     public ResponseEntity<?> create(
             @RequestPart("requests") String requestsJson,
-            @RequestPart("files") List<MultipartFile> images
+            @RequestPart(value = "files", required = false) List<MultipartFile> images
     ) {
-        return ResponseUtils.success(productService.createProducts(requestsJson, images));
+        return ResponseUtils.success(productAdminService.createProducts(requestsJson, images));
     }
 
     @PutMapping()
@@ -51,13 +51,13 @@ public class ProductAdminController {
             @RequestPart("request") String requestJson,
             @RequestPart(value = "files", required = false) List<MultipartFile> images
     ) {
-        return ResponseUtils.success(productService.updateProduct(requestJson, images));
+        return ResponseUtils.success(productAdminService.updateProduct(requestJson, images));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping()
     public ResponseEntity<?> delete(
             @RequestBody List<Long> ids
     ) {
-        return ResponseUtils.success(productService.delete(ids));
+        return ResponseUtils.success(productAdminService.delete(ids));
     }
 }

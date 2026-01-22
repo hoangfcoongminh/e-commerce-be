@@ -1,6 +1,7 @@
 package com.edward.order.controller.user;
 
 import com.edward.order.service.SubCategoryService;
+import com.edward.order.utils.ResponseUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +17,6 @@ public class SubCategoryController {
 
     @GetMapping()
     public ResponseEntity<?> getAll() {
-        return ResponseEntity.ok(subCategoryService.getAllAndActive());
+        return ResponseUtils.success(subCategoryService.getAllAndActive());
     }
 }
