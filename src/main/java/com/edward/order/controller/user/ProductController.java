@@ -23,11 +23,11 @@ public class ProductController {
         return ResponseUtils.success(productUserService.getAll(pageable));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getById(
-            @PathVariable Long id
+    @GetMapping("/{slug}")
+    public ResponseEntity<?> getBySlug(
+            @PathVariable String slug
     ) {
-        return ResponseUtils.success(productUserService.getById(id));
+        return ResponseUtils.success(productUserService.getBySlug(slug));
     }
 
     @PostMapping("/filter")
