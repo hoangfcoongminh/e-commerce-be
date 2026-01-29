@@ -18,10 +18,10 @@ public class ProductDto {
     private String description;
     private Long originalPrice;
     private Long realPrice;
+    private Integer discountPercent;
     private Integer stock;
     private String slug;
     private Integer status;
-    private List<PromotionDto> promotions;
     private List<ImageDto> images;
 
     public static Product of(ProductDto dto) {

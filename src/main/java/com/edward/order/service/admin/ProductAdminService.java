@@ -84,7 +84,6 @@ public class ProductAdminService {
 
             if (promotionMap == null) {
                 dto.setRealPrice(product.getOriginalPrice());
-                dto.setPromotions(null);
                 response.add(dto);
                 continue;
             }
@@ -110,8 +109,6 @@ public class ProductAdminService {
                 dtos.forEach(d -> {
                     d.setBestDeal(d.getId().equals(bestPromotion.get().getId()));
                 });
-                dto.setPromotions(dtos);
-
             }
             dto.setRealPrice(realPrice.get());
             response.add(dto);
