@@ -20,7 +20,7 @@ public class ProductAdminController {
 
     @GetMapping()
     public ResponseEntity<?> getAll(Pageable pageable) {
-        return ResponseUtils.success(productAdminService.getAll(pageable));
+        return ResponseUtils.successPage(productAdminService.getAll(pageable));
     }
 
     @GetMapping("/{id}")
@@ -35,7 +35,7 @@ public class ProductAdminController {
             @RequestBody SearchProductRequest request,
             Pageable pageable
     ) {
-        return ResponseUtils.success(productAdminService.search(request, pageable));
+        return ResponseUtils.successPage(productAdminService.search(request, pageable));
     }
 
     @PostMapping("/bulk-create")

@@ -26,7 +26,7 @@ public class SubCategoryAdminController {
     public ResponseEntity<?> search(
             @RequestBody SearchSubCategoryRq request,
             Pageable pageable) {
-        return ResponseUtils.success(subCategoryService.search(request, pageable));
+        return ResponseUtils.successPage(subCategoryService.search(request, pageable));
     }
 
     @PostMapping()

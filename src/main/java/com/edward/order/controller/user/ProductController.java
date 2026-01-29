@@ -20,14 +20,14 @@ public class ProductController {
     public ResponseEntity<?> getAll(
             Pageable pageable
     ) {
-        return ResponseUtils.success(productUserService.getAll(pageable));
+        return ResponseUtils.successPage(productUserService.getAll(pageable));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getById(
-            @PathVariable Long id
+    @GetMapping("/{slug}")
+    public ResponseEntity<?> getBySlug(
+            @PathVariable String slug
     ) {
-        return ResponseUtils.success(productUserService.getById(id));
+        return ResponseUtils.success(productUserService.getBySlug(slug));
     }
 
     @PostMapping("/filter")
@@ -35,6 +35,6 @@ public class ProductController {
             @RequestBody FilterProductRequest request,
             Pageable pageable
     ) {
-        return ResponseUtils.success(productUserService.filter(request, pageable));
+        return ResponseUtils.successPage(productUserService.filter(request, pageable));
     }
 }

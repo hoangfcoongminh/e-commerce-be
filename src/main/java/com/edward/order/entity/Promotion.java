@@ -21,6 +21,9 @@ public class Promotion extends BaseEntity {
     @Column(nullable = false)
     private String name;
 
+    @Column(nullable = false, unique = true)
+    private String slug;
+
     private String description;
 
     private Integer discountPercent;

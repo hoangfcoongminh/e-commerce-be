@@ -5,8 +5,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 
-public interface PromotionRepository extends JpaRepository<Promotion, Long> {
+public interface PromotionRepository extends JpaRepository<Promotion, Long>, SlugRepository {
 
     @Query(value = "SELECT p " +
             "FROM Promotion p " +
@@ -21,4 +22,6 @@ public interface PromotionRepository extends JpaRepository<Promotion, Long> {
     Long countActiveByIds(List<Long> promotionIds);
 
     boolean existsByIdInAndStatus(List<Long> ids, Integer status);
+
+    Optional<Promotion> findBySlug(String slug);
 }

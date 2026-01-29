@@ -38,8 +38,8 @@ public class ProductUserService {
         return new PageImpl<>(productDtos, pageable, data.getTotalElements());
     }
 
-    public ProductDto getById(Long id) {
-        Product product = productRepository.findByIdAndActive(id)
+    public ProductDto getBySlug(String slug) {
+        Product product = productRepository.findBySlugAndActive(slug)
                 .orElseThrow(() -> new RuntimeException("product.not.found"));
         return ProductDto.toDto(product);
     }
