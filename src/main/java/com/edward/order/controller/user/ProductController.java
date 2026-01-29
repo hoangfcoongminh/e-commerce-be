@@ -20,7 +20,7 @@ public class ProductController {
     public ResponseEntity<?> getAll(
             Pageable pageable
     ) {
-        return ResponseUtils.success(productUserService.getAll(pageable));
+        return ResponseUtils.successPage(productUserService.getAll(pageable));
     }
 
     @GetMapping("/{slug}")
@@ -35,6 +35,6 @@ public class ProductController {
             @RequestBody FilterProductRequest request,
             Pageable pageable
     ) {
-        return ResponseUtils.success(productUserService.filter(request, pageable));
+        return ResponseUtils.successPage(productUserService.filter(request, pageable));
     }
 }

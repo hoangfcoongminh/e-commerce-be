@@ -26,7 +26,7 @@ public class CategoryAdminController {
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Integer status,
             Pageable pageable) {
-        return ResponseUtils.success(categoryService.search(search, status, pageable));
+        return ResponseUtils.successPage(categoryService.search(search, status, pageable));
     }
 
     @PostMapping()
