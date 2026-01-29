@@ -1,6 +1,7 @@
 package com.edward.order.utils;
 
 import com.edward.order.api.ApiResponse;
+import com.edward.order.api.PageResponse;
 import com.edward.order.api.Pagination;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.Page;
@@ -24,29 +25,29 @@ public final class ResponseUtils {
         return req != null ? req.getRequestURI() : null;
     }
 
-    public static ResponseEntity<ApiResponse<Object>> success(Object data) {
+    public static <T> ResponseEntity<ApiResponse<T>> success(T data) {
 
-        ApiResponse<Object> response = ApiResponse.builder()
+        ApiResponse<T> response = ApiResponse.<T>builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.OK.value())
                 .success(true)
                 .url(getCurrentUrl())
+                .data(data)
                 .build();
 
-        if (data instanceof Page<?> page) {
-            response.setData(page.getContent());
-            Pagination paging = Pagination.builder()
-                    .page(page.getNumber())
-                    .size(page.getSize())
-                    .sort(page.getSort().toString())
-                    .totalElements(page.getTotalElements())
-                    .totalPages(page.getTotalPages())
-                    .build();
-            response.setPagination(paging);
-        } else {
-            response.setData(data);
-        }
+        return ResponseEntity.ok(response);
+    }
 
-        return new ResponseEntity<>(response, HttpStatus.OK);
+    public static <T> ResponseEntity<ApiResponse<PageResponse<T>>> successPage(Page<T> page) {
+
+        ApiResponse<PageResponse<T>> response = ApiResponse.<PageResponse<T>>builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.OK.value())
+                .success(true)
+                .url(getCurrentUrl())
+                .data(PageResponse.of(page))
+                .build();
+
+        return ResponseEntity.ok(response);
     }
 }
