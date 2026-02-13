@@ -8,6 +8,7 @@ import com.edward.order.dto.response.PromotionProductPageResponse;
 import com.edward.order.entity.Product;
 import com.edward.order.entity.Promotion;
 import com.edward.order.entity.PromotionProduct;
+import com.edward.order.enums.EntityStatus;
 import com.edward.order.exception.BusinessException;
 import com.edward.order.repository.PromotionProductRepository;
 import com.edward.order.repository.PromotionRepository;
@@ -43,6 +44,7 @@ public class PromotionService {
 
         Promotion promotion = CreatePromotionRequest.of(request);
         promotion.setSlug(slug);
+        promotion.setStatus(EntityStatus.ACTIVE.getValue());
 
         promotion = promotionRepository.save(promotion);
 

@@ -76,7 +76,6 @@ public class ProductAdminService {
         if (!promotionProducts.isEmpty()) {
             promotionMap = getPromotionMap(promotionProducts);
         }
-//        Map<Long, >
 
         List<ProductDto> response = new ArrayList<>();
         for (Product product : products) {
@@ -126,11 +125,15 @@ public class ProductAdminService {
                 .collect(Collectors.toMap(Promotion::getId, p -> p));
         return promotionProducts
                 .stream()
-                .collect(Collectors.toMap(PromotionProduct::getProductId, pp -> List.of(promotionMapById.get(pp.getPromotionId())),
-                        (oldList, newList) -> {
-                            oldList.addAll(newList);
-                            return oldList;
-                        }
+                .collect(
+                        Collectors
+                                .toMap(
+                                        PromotionProduct::getProductId,
+                                        pp -> List.of(promotionMapById.getOrDefault(pp.getPromotionId(), null)),
+                                        (oldList, newList) -> {
+                                            oldList.addAll(newList);
+                                            return oldList;
+                                        }
                 ));
     }
 
@@ -290,7 +293,7 @@ public class ProductAdminService {
         promotionProductRepository.deleteAll(promotionProducts);
 
         // Handle images
-        for(Long id : ids) {
+        for (Long id : ids) {
             r2StorageService.deleteImagesByProductId(id);
         }
         List<ProductImage> existingImages = productImageRepository.findAllByProductIdIn(ids);
