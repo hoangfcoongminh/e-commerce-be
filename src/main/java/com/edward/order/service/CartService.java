@@ -12,14 +12,46 @@ import com.edward.order.repository.ProductRepository;
 import com.edward.order.utils.SecurityUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class CartService {
+
+    private final RedisTemplate<String, Object> redisTemplate;
+
+    private static final Duration TTL = Duration.ofDays(7);
+
+    private String key(String cartId) {
+        return "cart:" + cartId;
+    }
+
+    public Cart getCart(String cartId) {
+        return (Cart) redisTemplate.opsForValue().get(key(cartId));
+    }
+
+    public Cart getOrCreateCart(String cartId) {
+        Cart cart = getCart(cartId);
+        if (cart == null) {
+            cart = new Cart();
+            save(cartId, cart);
+        }
+
+        return cart;
+    }
+
+    public void save(String cartId, Cart cart) {
+        redisTemplate.opsForValue().set(key(cartId), cart, TTL);
+    }
+
+    public void delete(String cartId) {
+        redisTemplate.delete(key(cartId));
+    }
 
     private final CartRepository cartRepository;
     private final CartDetailRepository cartDetailRepository;
