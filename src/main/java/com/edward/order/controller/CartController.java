@@ -13,15 +13,19 @@ public class CartController {
 
     private final CartService cartService;
 
-    @PostMapping("/add-to-cart/{slug}")
+    @PostMapping("/add-to-cart/{slug}/{quantity}")
     public ResponseEntity<?> addToCart(
-            @PathVariable String slug
+            @CookieValue(value = "cartToken") String cartToken,
+            @PathVariable String slug,
+            @PathVariable Integer quantity
     ) {
-        return ResponseUtils.success(cartService.addToCart(slug));
+        return ResponseUtils.success(cartService.addToCart(cartToken, slug, quantity));
     }
 
     @GetMapping()
-    public ResponseEntity<?> getCart() {
-        return ResponseUtils.success(cartService.getCart());
+    public ResponseEntity<?> getCart(
+            @CookieValue(value = "cartToken") String cartToken
+    ) {
+        return ResponseUtils.success(cartService.getOrCreateCart(cartToken));
     }
 }

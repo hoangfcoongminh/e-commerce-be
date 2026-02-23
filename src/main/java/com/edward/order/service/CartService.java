@@ -9,6 +9,7 @@ import com.edward.order.exception.BusinessException;
 import com.edward.order.repository.CartDetailRepository;
 import com.edward.order.repository.CartRepository;
 import com.edward.order.repository.ProductRepository;
+import com.edward.order.service.user.ProductUserService;
 import com.edward.order.utils.SecurityUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,10 @@ import java.util.Optional;
 public class CartService {
 
     private final RedisTemplate<String, Object> redisTemplate;
+    private final CartRepository cartRepository;
+    private final CartDetailRepository cartDetailRepository;
+    private final ProductRepository productRepository;
+    private final ProductUserService productUserService;
 
     private static final Duration TTL = Duration.ofDays(7);
 
@@ -35,14 +40,24 @@ public class CartService {
         return (Cart) redisTemplate.opsForValue().get(key(cartId));
     }
 
-    public Cart getOrCreateCart(String cartId) {
-        Cart cart = getCart(cartId);
-        if (cart == null) {
-            cart = new Cart();
-            save(cartId, cart);
+    public Cart getOrCreateCart(String cartToken) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        Optional<Cart> cartOpt;
+
+        if (userId != null) {
+            cartOpt = cartRepository.findByUserIdAndCheckedOutFalse(userId);
+        } else {
+            cartOpt = cartRepository.findByCartTokenAndCheckedOutFalse(cartToken);
         }
 
-        return cart;
+        if (cartOpt.isPresent()) {
+            return cartOpt.get();
+        }
+
+        Cart cart = new Cart();
+        cart.setUserId(userId);
+        cart.setCartToken(cartToken);
+        return cartRepository.save(cart);
     }
 
     public void save(String cartId, Cart cart) {
@@ -53,46 +68,34 @@ public class CartService {
         redisTemplate.delete(key(cartId));
     }
 
-    private final CartRepository cartRepository;
-    private final CartDetailRepository cartDetailRepository;
-    private final ProductRepository productRepository;
-
-    public CartDto getCart() {
-        Long currentUserId = SecurityUtils.getCurrentUserId();
-        Cart cart = cartRepository.findByUserId(currentUserId);
-        List<CartDetail> cartDetails = getCartDetailsByCartId(cart.getId());
-        List<CartDetailDto> cartDetailDtos = cartDetails.stream()
-                .map(CartDetailDto::toDto)
-                .toList();
-        return CartDto.toDto(cart, cartDetailDtos);
-    }
-
     @Transactional
-    public CartDto addToCart(String slug) {
-        Long currentUserId = SecurityUtils.getCurrentUserId();
+    public String addToCart(String cartToken, String slug, Integer quantity) {
 
-        Product product = productRepository.findBySlugAndActive(slug)
-                .orElseThrow(() -> new BusinessException("product.not.found"));
-        Cart cart = cartRepository.findByUserId(currentUserId);
+        Cart cart = getOrCreateCart(cartToken);
 
-        Optional<CartDetail> cartDetailOptional = cartDetailRepository.findByCartIdAndProductId(cart.getId(), product.getId());
-        if (cartDetailOptional.isPresent()) {
-            CartDetail cartDetail = cartDetailOptional.get();
-            cartDetail.setQuantity(cartDetail.getQuantity() + 1);
-            cartDetailRepository.save(cartDetail);
+        Long productId = productRepository.findBySlugAndActive(slug)
+                .orElseThrow(() -> new BusinessException("product.not.found"))
+                .getId();
+
+        CartDetail detail = cartDetailRepository
+                .findByCartIdAndProductId(cart.getId(), productId)
+                .orElse(null);
+
+        long currentPrice = productUserService.getCurrentPrice(productId);
+
+        if (detail == null) {
+            detail = new CartDetail();
+            detail.setCartId(cart.getId());
+            detail.setProductId(productId);
+            detail.setQuantity(quantity);
+            detail.setSnapShotPrice(currentPrice);
         } else {
-            CartDetail cartDetail = new CartDetail();
-            cartDetail.setCartId(cart.getId());
-            cartDetail.setProductId(product.getId());
-            cartDetail.setQuantity(1);
-            cartDetailRepository.save(cartDetail);
+            detail.setQuantity(detail.getQuantity() + quantity);
         }
-        List<CartDetail> cartDetails = getCartDetailsByCartId(cart.getId());
 
-        List<CartDetailDto> cartDetailDtos = cartDetails.stream()
-                .map(CartDetailDto::toDto)
-                .toList();
-        return CartDto.toDto(cart, cartDetailDtos);
+        cartDetailRepository.save(detail);
+
+        return "success";
     }
 
     private List<CartDetail> getCartDetailsByCartId(Long cartId) {

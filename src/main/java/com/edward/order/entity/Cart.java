@@ -22,4 +22,7 @@ public class Cart extends BaseEntity {
 
     private Long userId;
 
+    private String cartToken;
+
+    private boolean checkedOut;
 }

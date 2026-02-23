@@ -65,5 +65,9 @@ public class ProductUserService {
         return new PageImpl<>(response, pageable, data.getTotalElements());
     }
 
-
+    public long getCurrentPrice(long productId) {
+        Product product = productRepository.findByIdAndActive(productId)
+                .orElseThrow(() -> new RuntimeException("product.not.found"));
+        return product.getOriginalPrice();
+    }
 }

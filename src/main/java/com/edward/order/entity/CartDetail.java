@@ -25,4 +25,6 @@ public class CartDetail extends BaseEntity {
     private Long productId;
 
     private Integer quantity;
+
+    private Long snapShotPrice;
 }
