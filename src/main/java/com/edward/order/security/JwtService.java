@@ -27,7 +27,7 @@ public class JwtService {
     private long REFRESH_EXPIRATION;
 
     // =========================================
-    // 1. Generate Access Token (có roles)
+    // 1. Generate Access Token
     // =========================================
     public String generateToken(UserDetails userDetails) {
 
@@ -44,7 +44,7 @@ public class JwtService {
     }
 
     // =========================================
-    // 2. Generate Refresh Token (không cần roles)
+    // 2. Generate Refresh Token
     // =========================================
     public String generateRefreshToken(UserDetails userDetails) {
         return Jwts.builder()
@@ -56,14 +56,14 @@ public class JwtService {
     }
 
     // =========================================
-    // 3. Extract Email (subject)
+    // 3. Extract Email
     // =========================================
     public String extractEmail(String token) {
         return extractAllClaims(token).getSubject();
     }
 
     // =========================================
-    // 4. Extract Roles (optional nếu bạn cần)
+    // 4. Extract Roles
     // =========================================
     public List<String> extractRoles(String token) {
         Object rolesObj = extractAllClaims(token).get("roles");
@@ -77,14 +77,14 @@ public class JwtService {
     }
 
     // =========================================
-    // 5. Validate Token (đã fix bug parserBuilder)
+    // 5. Validate Token
     // =========================================
     public boolean isTokenValid(String token, UserDetails userDetails) {
         String email = extractEmail(token);
         return email.equals(userDetails.getUsername()) && !isTokenExpired(token);
     }
 
-    private boolean isTokenExpired(String token) {
+    public boolean isTokenExpired(String token) {
         Date expiration = extractAllClaims(token).getExpiration();
         return expiration.before(new Date());
     }

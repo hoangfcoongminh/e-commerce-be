@@ -2,6 +2,7 @@ package com.edward.order.controller;
 
 import com.edward.order.dto.request.LoginRequest;
 import com.edward.order.dto.request.RegisterRequest;
+import com.edward.order.dto.request.RefreshTokenRequest;
 import com.edward.order.service.AuthService;
 import com.edward.order.utils.ResponseUtils;
 import jakarta.validation.Valid;
@@ -31,5 +32,12 @@ public class AuthController {
             @Valid @RequestBody LoginRequest loginRequest
     ) {
         return ResponseUtils.success(authService.login(loginRequest));
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<?> refreshToken(
+            @Valid @RequestBody RefreshTokenRequest request
+    ) {
+        return ResponseUtils.success(authService.refreshToken(request.getRefreshToken()));
     }
 }

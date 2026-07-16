@@ -34,8 +34,8 @@ public class AuthService {
         String token = jwtService.generateToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
 
-        Cart cart = new Cart(null, user.getId());
-        cartRepository.save(cart);
+//        Cart cart = new Cart(null, user.getId());
+//        cartRepository.save(cart);
 
         AuthResponse response = new AuthResponse();
         response.setToken(token);
@@ -59,6 +59,34 @@ public class AuthService {
         AuthResponse response = new AuthResponse();
         response.setToken(token);
         response.setRefreshToken(refreshToken);
+        response.setUser(UserDto.toDto(user));
+
+        return response;
+    }
+
+    public AuthResponse refreshToken(String refreshToken) {
+        // Validate refresh token and extract email
+        String email;
+        try {
+            email = jwtService.extractEmail(refreshToken);
+        } catch (Exception ex) {
+            throw new BusinessException("Invalid refresh token");
+        }
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("User not found"));
+
+        // Optional: verify expiry
+        if (jwtService.isTokenExpired(refreshToken)) {
+            throw new BusinessException("Refresh token expired");
+        }
+
+        String newAccessToken = jwtService.generateToken(user);
+        String newRefreshToken = jwtService.generateRefreshToken(user);
+
+        AuthResponse response = new AuthResponse();
+        response.setToken(newAccessToken);
+        response.setRefreshToken(newRefreshToken);
         response.setUser(UserDto.toDto(user));
 
         return response;
